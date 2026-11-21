@@ -1,5 +1,5 @@
-export default async function handler(req, res) {
-  const { keyword, start = 0, limit = 30 } = req.query;
+module.exports = async (req, res) => {
+  const { keyword = 'gula', start = 0, limit = 30 } = req.query;
   const url = `https://webcommerce-gw.alfagift.id/v2/products/searches?keyword=${encodeURIComponent(keyword)}&start=${start}&limit=${limit}`;
 
   try {
@@ -20,9 +20,15 @@ export default async function handler(req, res) {
         ...(req.headers['token'] ? { 'token': req.headers['token'] } : {})
       }
     });
-    const data = await response.json();
-    res.status(response.status).json(data);
+
+    const text = await response.text();
+    try {
+      const json = JSON.parse(text);
+      return res.status(response.status).json(json);
+    } catch {
+      return res.status(response.status).send(text);
+    }
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: err.message });
   }
-}
+};
